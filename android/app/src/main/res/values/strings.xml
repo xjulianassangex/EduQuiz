@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EduQuiz</string>
+    <string name="title_activity_main">EduQuiz</string>
+    <string name="package_name">com.eduquiz.app</string>
+    <string name="custom_url_scheme">com.eduquiz.app</string>
+</resources>
