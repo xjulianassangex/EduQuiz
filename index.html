@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduQuiz Ultimate</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Animated Background -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Level Up Overlay -->
+<div id="level-up-overlay" class="hidden">
+  <div class="level-up-box">
+    <div class="level-up-icon">⚡</div>
+    <div class="level-up-title" id="level-up-title">LEVEL UP!</div>
+    <div class="level-up-sub" id="level-up-sub">You reached Level 5</div>
+    <button class="btn btn-primary btn-lg mt-24" onclick="hideLevelUp()" style="margin-top:24px" data-i18n="awesome">Awesome!</button>
+  </div>
+</div>
+
+<!-- Achievement Popup -->
+<div id="achievement-popup" class="hidden">
+  <div style="font-size:32px" id="ach-popup-icon">🏆</div>
+  <div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#ffd700" data-i18n="achievement_unlocked">Achievement Unlocked!</div>
+    <div style="font-size:15px;font-weight:700;margin-top:3px" id="ach-popup-name">First Steps</div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-top:2px" id="ach-popup-desc">Complete your first quiz</div>
+  </div>
+</div>
+
+<!-- Combo Display -->
+<div class="combo-display hidden" id="combo-display">
+  <div class="combo-badge" id="combo-badge">🔥 3x COMBO!</div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🧠</div>
+      <h1>EduQuiz</h1>
+      <p data-i18n="auth_subtitle">The ultimate quiz platform</p>
+    </div>
+    <div class="tabs auth-tabs">
+      <button class="tab-btn active" onclick="switchAuthTab('login')" data-i18n="login">Login</button>
+      <button class="tab-btn" onclick="switchAuthTab('register')" data-i18n="register">Register</button>
+    </div>
+    <!-- Login -->
+    <div id="auth-login" class="tab-content active">
+      <div class="input-group">
+        <label class="input-label" data-i18n="email">Email</label>
+        <input class="input" type="email" id="login-email" data-i18n-placeholder="email_placeholder" placeholder="you@example.com" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" data-i18n="password">Password</label>
+        <input class="input" type="password" id="login-password" data-i18n-placeholder="password_placeholder" placeholder="Your password" />
+      </div>
+      <div class="flex items-center gap-8 mb-16" style="margin-bottom:16px">
+        <input type="checkbox" id="remember-me" style="accent-color:var(--text-primary);width:16px;height:16px" />
+        <label for="remember-me" style="font-size:13px;color:var(--text-secondary);cursor:pointer" data-i18n="remember_me">Remember Me</label>
+      </div>
+      <button class="btn btn-primary w-full" onclick="handleLogin()" data-i18n="login">Login</button>
+      <div class="auth-footer" style="margin-top:16px">
+        <span data-i18n="no_account">No account?</span>
+        <a href="#" onclick="switchAuthTab('register')" style="color:var(--text-primary);font-weight:600;margin-left:4px" data-i18n="register">Register</a>
+      </div>
+    </div>
+    <!-- Register -->
+    <div id="auth-register" class="tab-content">
+      <div class="input-group">
+        <label class="input-label" data-i18n="username">Username</label>
+        <input class="input" type="text" id="reg-username" data-i18n-placeholder="username_placeholder" placeholder="CoolLearner" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" data-i18n="email">Email</label>
+        <input class="input" type="email" id="reg-email" data-i18n-placeholder="email_placeholder" placeholder="you@example.com" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" data-i18n="password">Password</label>
+        <input class="input" type="password" id="reg-password" data-i18n-placeholder="password_placeholder" placeholder="Min 6 characters" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" data-i18n="confirm_password">Confirm Password</label>
+        <input class="input" type="password" id="reg-confirm" data-i18n-placeholder="confirm_placeholder" placeholder="Repeat password" />
+      </div>
+      <button class="btn btn-primary w-full" onclick="handleRegister()" data-i18n="create_account">Create Account</button>
+    </div>
+    <!-- Lang switcher -->
+    <div class="lang-switcher" style="margin-top:20px;justify-content:center">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('ru')">RU</button>
+      <button class="lang-btn" onclick="setLang('kz')">KZ</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP (hidden until logged in) -->
+<div id="main-app" class="hidden">
+
+<!-- Header -->
+<header class="header">
+  <div class="header-logo">
+    <div class="header-logo-icon">🧠</div>
+    <span>EduQuiz</span>
+  </div>
+  <nav class="header-nav" id="header-nav">
+    <button class="nav-btn active" onclick="navigate('home')" data-i18n="home">Home</button>
+    <button class="nav-btn" onclick="navigate('quizzes')" data-i18n="quizzes">Quizzes</button>
+    <button class="nav-btn" onclick="navigate('missions')" data-i18n="missions">Missions</button>
+    <button class="nav-btn" onclick="navigate('shop')" data-i18n="shop">Shop</button>
+    <button class="nav-btn" onclick="navigate('achievements')" data-i18n="achievements">Achievements</button>
+    <button class="nav-btn" onclick="navigate('leaderboard')" data-i18n="leaderboard">Leaderboard</button>
+    <button class="nav-btn" onclick="navigate('analytics')" data-i18n="analytics">Analytics</button>
+    <button class="nav-btn" onclick="navigate('multiplayer')" data-i18n="multiplayer">Multiplayer</button>
+    <button class="nav-btn" onclick="navigate('ai-gen')" data-i18n="ai_gen">AI Gen</button>
+  </nav>
+  <div class="header-actions">
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('ru')">RU</button>
+      <button class="lang-btn" onclick="setLang('kz')">KZ</button>
+    </div>
+    <button class="icon-btn" onclick="toggleTheme()" id="theme-toggle-btn" title="Toggle Theme">🌙</button>
+    <div class="avatar-btn" onclick="navigate('profile')" id="header-avatar" title="Profile">👤</div>
+  </div>
+</header>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-btn active" onclick="navigate('home')">
+      <span class="nav-icon">🏠</span>
+      <span data-i18n="home">Home</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="navigate('quizzes')">
+      <span class="nav-icon">📝</span>
+      <span data-i18n="quizzes">Quizzes</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="navigate('missions')">
+      <span class="nav-icon">🎯</span>
+      <span data-i18n="missions">Missions</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="navigate('shop')">
+      <span class="nav-icon">🛍</span>
+      <span data-i18n="shop">Shop</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="navigate('profile')">
+      <span class="nav-icon">👤</span>
+      <span data-i18n="profile">Profile</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HOME SCREEN ===== -->
+<main id="screen-home" class="screen active">
+  <div class="section-header">
+    <div>
+      <div class="section-title" id="home-welcome">Welcome back!</div>
+      <div class="section-sub" id="home-sub">Ready to learn something new today?</div>
+    </div>
+    <button class="btn btn-primary" onclick="navigate('quizzes')" data-i18n="browse_quizzes">Browse Quizzes</button>
+  </div>
+
+  <!-- XP & Level Bar -->
+  <div class="card mb-24" style="margin-bottom:24px">
+    <div class="flex items-center justify-between mb-12" style="margin-bottom:12px">
+      <div class="flex items-center gap-12" style="gap:12px">
+        <div id="home-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--glass-strong);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px">👤</div>
+        <div>
+          <div style="font-size:16px;font-weight:700" id="home-username">Player</div>
+          <div style="font-size:12px;color:var(--text-secondary)" id="home-rank-label">Bronze • Level 1</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-8" style="gap:8px">
+        <span id="home-xp-badge" class="badge badge-white">0 XP</span>
+      </div>
+    </div>
+    <div class="xp-bar-wrapper">
+      <span style="font-size:11px;color:var(--text-muted);font-weight:700" id="home-level-label">LV 1</span>
+      <div class="xp-bar-track">
+        <div class="xp-bar-fill" id="home-xp-bar" style="width:0%"></div>
+      </div>
+      <span style="font-size:11px;color:var(--text-muted)" id="home-xp-next">0/100 XP</span>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stat-grid mb-24" style="margin-bottom:24px">
+    <div class="stat-card">
+      <div class="stat-value" id="home-stat-games">0</div>
+      <div class="stat-label" data-i18n="games_played">Games Played</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="home-stat-wins">0</div>
+      <div class="stat-label" data-i18n="wins">Wins</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="home-stat-accuracy">0%</div>
+      <div class="stat-label" data-i18n="accuracy">Accuracy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="home-stat-streak">0</div>
+      <div class="stat-label" data-i18n="best_streak">Best Streak</div>
+    </div>
+  </div>
+
+  <!-- Daily Missions Preview -->
+  <div class="section-header" style="margin-bottom:14px">
+    <div style="font-size:16px;font-weight:700" data-i18n="daily_missions">Daily Missions</div>
+    <button class="btn btn-ghost btn-sm" onclick="navigate('missions')" data-i18n="view_all">View All</button>
+  </div>
+  <div id="home-missions" style="margin-bottom:24px"></div>
+
+  <!-- Recent Quizzes -->
+  <div class="section-header" style="margin-bottom:14px">
+    <div style="font-size:16px;font-weight:700" data-i18n="recent_quizzes">Recent Quizzes</div>
+    <button class="btn btn-ghost btn-sm" onclick="navigate('quizzes')" data-i18n="see_all">See All</button>
+  </div>
+  <div id="home-recent-quizzes" class="card-grid"></div>
+</main>
+
+<!-- ===== QUIZZES SCREEN ===== -->
+<main id="screen-quizzes" class="screen">
+  <div class="section-header">
+    <div>
+      <div class="section-title" data-i18n="my_quizzes">My Quizzes</div>
+    </div>
+    <div class="flex gap-8" style="gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="openRepeatMistakes()" data-i18n="repeat_mistakes">🔄 Repeat Mistakes</button>
+      <button class="btn btn-primary" onclick="openCreateQuiz()" data-i18n="create_quiz">+ Create Quiz</button>
+    </div>
+  </div>
+  <input class="input mb-16" style="margin-bottom:16px" id="quiz-search" data-i18n-placeholder="search_quizzes" placeholder="Search quizzes..." oninput="renderQuizList()" />
+  <div id="quiz-list" class="card-grid"></div>
+</main>
+
+<!-- ===== CREATE/EDIT QUIZ SCREEN ===== -->
+<main id="screen-create" class="screen">
+  <div class="section-header">
+    <div>
+      <div class="section-title" id="create-title" data-i18n="create_quiz">Create Quiz</div>
+    </div>
+    <div class="flex gap-8" style="gap:8px">
+      <button class="btn btn-ghost" onclick="navigate('quizzes')" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="saveQuiz()" data-i18n="save_quiz">Save Quiz</button>
+    </div>
+  </div>
+  <div class="card mb-24" style="margin-bottom:24px">
+    <div class="input-group">
+      <label class="input-label" data-i18n="quiz_title">Quiz Title</label>
+      <input class="input" id="quiz-title-input" data-i18n-placeholder="quiz_title_ph" placeholder="Enter quiz title..." />
+    </div>
+    <div class="input-group">
+      <label class="input-label" data-i18n="description">Description</label>
+      <textarea class="input" id="quiz-desc-input" data-i18n-placeholder="quiz_desc_ph" placeholder="What is this quiz about?"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="input-group" style="margin:0">
+        <label class="input-label" data-i18n="category">Category</label>
+        <input class="input" id="quiz-cat-input" data-i18n-placeholder="category_ph" placeholder="e.g. Science" />
+      </div>
+      <div class="input-group" style="margin:0">
+        <label class="input-label" data-i18n="time_per_question">Time / Question (sec)</label>
+        <input class="input" type="number" id="quiz-time-input" value="30" min="5" max="300" />
+      </div>
+    </div>
+  </div>
+  <div id="questions-list"></div>
+  <button class="btn btn-ghost w-full" id="add-question-btn" onclick="addQuestion()" data-i18n="add_question" style="margin-top:12px">+ Add Question</button>
+</main>
+
+<!-- ===== QUIZ PLAY SCREEN ===== -->
+<main id="screen-play" class="screen" style="max-width:800px">
+  <!-- Boosters Bar -->
+  <div class="boosters-bar" id="boosters-bar"></div>
+  <!-- Header -->
+  <div class="quiz-play-header">
+    <div>
+      <div style="font-size:13px;color:var(--text-secondary)" id="play-quiz-name">Quiz Name</div>
+      <div style="font-size:11px;color:var(--text-muted)" id="play-question-counter">Q 1 / 10</div>
+    </div>
+    <div class="quiz-timer" id="play-timer">30</div>
+    <div>
+      <div style="font-size:13px;font-weight:700" id="play-score">Score: 0</div>
+      <div style="font-size:11px;color:var(--text-secondary)" id="play-streak-label">Streak: 0</div>
+    </div>
+  </div>
+  <div class="progress-bar mb-16" style="margin-bottom:16px">
+    <div class="progress-fill" id="play-progress" style="width:0%"></div>
+  </div>
+  <div id="question-area"></div>
+  <div id="explanation-area"></div>
+  <button id="next-btn" class="btn btn-primary w-full mt-16 hidden" style="margin-top:16px" onclick="nextQuestion()" data-i18n="next_question">Next Question →</button>
+</main>
+
+<!-- ===== RESULTS SCREEN ===== -->
+<main id="screen-results" class="screen" style="max-width:700px">
+  <div class="results-summary" id="results-summary"></div>
+  <div id="results-details"></div>
+  <div class="flex gap-8 mt-24" style="gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center">
+    <button class="btn btn-ghost" onclick="navigate('home')" data-i18n="go_home">Go Home</button>
+    <button class="btn btn-ghost" onclick="navigate('quizzes')" data-i18n="browse_quizzes">Browse Quizzes</button>
+    <button class="btn btn-primary" id="play-again-btn" onclick="playAgainCurrentQuiz()" data-i18n="play_again">Play Again</button>
+  </div>
+</main>
+
+<!-- ===== MISSIONS SCREEN ===== -->
+<main id="screen-missions" class="screen">
+  <div class="section-header">
+    <div>
+      <div class="section-title" data-i18n="daily_missions">Daily Missions</div>
+      <div class="section-sub" id="missions-reset-time"></div>
+    </div>
+    <div id="missions-xp-earned" class="badge badge-white"></div>
+  </div>
+  <div id="missions-list"></div>
+</main>
+
+<!-- ===== SHOP SCREEN ===== -->
+<main id="screen-shop" class="screen">
+  <div class="section-header">
+    <div>
+      <div class="section-title" data-i18n="shop">Shop</div>
+    </div>
+    <div class="badge badge-white" id="shop-balance">0 XP</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchShopTab('avatars')" data-i18n="avatars">Avatars</button>
+    <button class="tab-btn" onclick="switchShopTab('frames')" data-i18n="frames">Frames</button>
+    <button class="tab-btn" onclick="switchShopTab('themes')" data-i18n="themes">Themes</button>
+    <button class="tab-btn" onclick="switchShopTab('badges_shop')" data-i18n="badges">Badges</button>
+  </div>
+  <div id="shop-content"></div>
+</main>
+
+<!-- ===== ACHIEVEMENTS SCREEN ===== -->
+<main id="screen-achievements" class="screen">
+  <div class="section-header">
+    <div>
+      <div class="section-title" data-i18n="achievements">Achievements</div>
+      <div class="section-sub" id="ach-count"></div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchAchTab('all')" data-i18n="all">All</button>
+    <button class="tab-btn" onclick="switchAchTab('common')" data-i18n="common">Common</button>
+    <button class="tab-btn" onclick="switchAchTab('rare')" data-i18n="rare">Rare</button>
+    <button class="tab-btn" onclick="switchAchTab('epic')" data-i18n="epic">Epic</button>
+    <button class="tab-btn" onclick="switchAchTab('legendary')" data-i18n="legendary">Legendary</button>
+  </div>
+  <div id="achievements-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px"></div>
+</main>
+
+<!-- ===== LEADERBOARD SCREEN ===== -->
+<main id="screen-leaderboard" class="screen">
+  <div class="section-header">
+    <div class="section-title" data-i18n="leaderboard">Leaderboard</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchLbTab('global')" data-i18n="global">Global</button>
+    <button class="tab-btn" onclick="switchLbTab('weekly')" data-i18n="weekly">Weekly</button>
+    <button class="tab-btn" onclick="switchLbTab('monthly')" data-i18n="monthly">Monthly</button>
+    <button class="tab-btn" onclick="switchLbTab('friends')" data-i18n="friends">Friends</button>
+  </div>
+  <div id="leaderboard-list"></div>
+</main>
+
+<!-- ===== ANALYTICS SCREEN ===== -->
+<main id="screen-analytics" class="screen">
+  <div class="section-header">
+    <div class="section-title" data-i18n="analytics">Analytics</div>
+  </div>
+  <div class="stat-grid mb-24" style="margin-bottom:24px" id="analytics-stats"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px" id="analytics-charts-row">
+    <div class="chart-wrapper">
+      <div class="chart-title" data-i18n="xp_over_time">XP Over Time</div>
+      <canvas id="chart-xp" class="chart" height="160"></canvas>
+    </div>
+    <div class="chart-wrapper">
+      <div class="chart-title" data-i18n="accuracy_over_time">Accuracy Over Time</div>
+      <canvas id="chart-accuracy" class="chart" height="160"></canvas>
+    </div>
+  </div>
+  <div class="chart-wrapper mb-16" style="margin-bottom:16px">
+    <div class="chart-title" data-i18n="category_performance">Category Performance</div>
+    <div id="category-bars"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px" data-i18n="strong_topics">💪 Strong Topics</div>
+      <div id="strong-topics"></div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px" data-i18n="weak_topics">⚠️ Weak Topics</div>
+      <div id="weak-topics"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== MULTIPLAYER SCREEN ===== -->
+<main id="screen-multiplayer" class="screen">
+  <div class="section-header">
+    <div class="section-title" data-i18n="multiplayer">Multiplayer</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px" id="mp-main-grid">
+    <div class="room-card">
+      <div style="font-size:28px;margin-bottom:8px">🚪</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px" data-i18n="create_room">Create Room</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px" data-i18n="create_room_desc">Start a new multiplayer session</div>
+      <button class="btn btn-primary w-full" onclick="createRoom()" data-i18n="create_room">Create Room</button>
+    </div>
+    <div class="room-card">
+      <div style="font-size:28px;margin-bottom:8px">🔗</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px" data-i18n="join_room">Join Room</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" data-i18n="join_room_desc">Enter a room code to join</div>
+      <input class="input mb-8" style="margin-bottom:8px;text-transform:uppercase;letter-spacing:3px;text-align:center" id="join-code-input" maxlength="6" data-i18n-placeholder="room_code_ph" placeholder="ABCD12" />
+      <button class="btn btn-ghost w-full" onclick="joinRoom()" data-i18n="join_room">Join Room</button>
+    </div>
+  </div>
+  <div id="mp-lobby" class="hidden">
+    <div class="section-header">
+      <div style="font-size:16px;font-weight:700" data-i18n="lobby">Lobby</div>
+      <button class="btn btn-ghost btn-sm" onclick="leaveRoom()" data-i18n="leave">Leave</button>
+    </div>
+    <div class="room-card mb-16" style="margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px" data-i18n="room_code">Room Code</div>
+      <div class="room-code-display" id="room-code-display">------</div>
+      <button class="btn btn-ghost btn-sm" onclick="copyRoomCode()" data-i18n="copy_code">📋 Copy Code</button>
+    </div>
+    <div id="players-list"></div>
+    <button class="btn btn-primary w-full mt-16" style="margin-top:16px" onclick="startMultiplayerGame()" id="start-mp-btn" data-i18n="start_game">Start Game</button>
+  </div>
+</main>
+
+<!-- ===== AI GEN SCREEN ===== -->
+<main id="screen-ai-gen" class="screen">
+  <div class="section-header">
+    <div class="section-title" data-i18n="ai_gen">AI Quiz Generator</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" id="ai-gen-grid">
+    <div>
+      <div class="generator-box">
+        <div style="font-size:15px;font-weight:700;margin-bottom:20px" data-i18n="generate_from_topic">Generate from Topic</div>
+        <div class="input-group">
+          <label class="input-label" data-i18n="topic">Topic</label>
+          <input class="input" id="ai-topic" data-i18n-placeholder="topic_ph" placeholder="e.g. World War II" />
+        </div>
+        <div class="input-group">
+          <label class="input-label" data-i18n="difficulty">Difficulty</label>
+          <div class="difficulty-grid">
+            <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-diff="easy" data-i18n="easy">Easy</button>
+            <button class="difficulty-btn" onclick="setDifficulty('medium')" data-diff="medium" data-i18n="medium">Medium</button>
+            <button class="difficulty-btn" onclick="setDifficulty('hard')" data-diff="hard" data-i18n="hard">Hard</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label" data-i18n="question_count">Question Count</label>
+          <input class="input" type="number" id="ai-count" value="10" min="3" max="30" />
+        </div>
+        <button class="btn btn-primary w-full" onclick="generateFromTopic()" data-i18n="generate_quiz">✨ Generate Quiz</button>
+      </div>
+    </div>
+    <div>
+      <div class="generator-box">
+        <div style="font-size:15px;font-weight:700;margin-bottom:20px" data-i18n="generate_from_text">Generate from Text</div>
+        <div class="input-group">
+          <label class="input-label" data-i18n="paste_text">Paste Text</label>
+          <textarea class="input" id="ai-text-input" style="min-height:160px" data-i18n-placeholder="text_ph" placeholder="Paste any text and we'll generate questions from it..."></textarea>
+        </div>
+        <div class="input-group">
+          <label class="input-label" data-i18n="question_count">Questions</label>
+          <input class="input" type="number" id="ai-text-count" value="5" min="2" max="20" />
+        </div>
+        <button class="btn btn-primary w-full" onclick="generateFromText()" data-i18n="generate_quiz">✨ Generate</button>
+      </div>
+    </div>
+  </div>
+  <div id="ai-preview" class="hidden mt-24" style="margin-top:24px">
+    <div class="section-header">
+      <div style="font-size:16px;font-weight:700" data-i18n="preview">Preview</div>
+      <div class="flex gap-8" style="gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="clearAIPreview()" data-i18n="clear">Clear</button>
+        <button class="btn btn-primary btn-sm" onclick="saveGeneratedQuiz()" data-i18n="save_quiz">Save Quiz</button>
+      </div>
+    </div>
+    <div id="ai-preview-content"></div>
+  </div>
+</main>
+
+<!-- ===== PROFILE SCREEN ===== -->
+<main id="screen-profile" class="screen">
+  <div class="profile-header" id="profile-header"></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchProfileTab('overview')" data-i18n="overview">Overview</button>
+    <button class="tab-btn" onclick="switchProfileTab('edit')" data-i18n="edit_profile">Edit Profile</button>
+    <button class="tab-btn" onclick="switchProfileTab('security')" data-i18n="security">Security</button>
+  </div>
+  <div id="profile-overview" class="tab-content active"></div>
+  <div id="profile-edit" class="tab-content">
+    <div class="card">
+      <div class="input-group">
+        <label class="input-label" data-i18n="username">Username</label>
+        <input class="input" id="edit-username" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" data-i18n="email">Email</label>
+        <input class="input" type="email" id="edit-email" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" data-i18n="choose_avatar">Choose Avatar</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px" id="avatar-picker"></div>
+      </div>
+      <button class="btn btn-primary" onclick="saveProfile()" data-i18n="save_changes">Save Changes</button>
+    </div>
+  </div>
+  <div id="profile-security" class="tab-content">
+    <div class="card">
+      <div class="input-group">
+        <label class="input-label" data-i18n="current_password">Current Password</label>
+        <input class="input" type="password" id="old-password" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" data-i18n="new_password">New Password</label>
+        <input class="input" type="password" id="new-password" />
+      </div>
+      <div class="input-group">
+        <label class="input-label" data-i18n="confirm_new_password">Confirm New Password</label>
+        <input class="input" type="password" id="confirm-new-password" />
+      </div>
+      <div class="flex gap-8" style="gap:8px">
+        <button class="btn btn-primary" onclick="changePassword()" data-i18n="change_password">Change Password</button>
+        <button class="btn btn-danger" onclick="handleLogout()" data-i18n="logout">Logout</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+</div><!-- /main-app -->
+
+<!-- ===== MODALS ===== -->
+
+<!-- Booster Select Modal -->
+<div id="booster-select-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="choose_boosters">Choose Boosters</div>
+      <button class="modal-close" onclick="closeBoosters()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px" data-i18n="boosters_desc">Select up to 2 boosters to use in this quiz.</p>
+      <div id="booster-select-list" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+      <button class="btn btn-primary w-full mt-16" style="margin-top:16px" onclick="startQuizWithBoosters()" data-i18n="start_quiz">Start Quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div id="delete-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="delete_quiz">Delete Quiz</div>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px" data-i18n="delete_confirm">Are you sure you want to delete this quiz? This cannot be undone.</p>
+      <div class="flex gap-8" style="gap:8px">
+        <button class="btn btn-ghost flex-1" onclick="closeDeleteModal()" data-i18n="cancel">Cancel</button>
+        <button class="btn btn-danger flex-1" onclick="confirmDelete()" data-i18n="delete">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import/Export Modal -->
+<div id="io-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="data_management">Data Management</div>
+      <button class="modal-close" onclick="closeIOModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px" data-i18n="export_data">Export Data</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px" data-i18n="export_desc">Download all your quizzes, progress and settings.</p>
+        <button class="btn btn-ghost w-full" onclick="exportData()" data-i18n="export">📤 Export</button>
+      </div>
+      <div class="divider"></div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px" data-i18n="import_data">Import Data</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px" data-i18n="import_desc">Restore from a previously exported file.</p>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
+        <button class="btn btn-ghost w-full" onclick="document.getElementById('import-file').click()" data-i18n="import">📥 Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
